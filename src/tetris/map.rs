@@ -1,4 +1,4 @@
-use super::blocks::*;
+use super::block::*;
 //This is abstract version of real map
 pub struct Map {
     map: Vec<BlockType>,
@@ -18,14 +18,14 @@ impl Map {
             map.map.push(BlockType::None);
         }
 
-        map.init();
+        map.draw_border();
 
         map
     }
 
     pub fn get_at(&self, x: usize, y: usize) -> Option<&BlockType> {
         if self.check_boundary(x, y) {
-            return Some(&self.map[y * self.height + x]);
+            return Some(&self.map[y as usize * self.width + x as usize]);
         }
 
         None
@@ -33,19 +33,30 @@ impl Map {
 
     pub fn set_at(&mut self, x: usize, y: usize, new_block: BlockType) {
         if self.check_boundary(x, y) {
-            self.map[y * self.width + x] = new_block;
+            self.map[y as usize * self.width + x as usize] = new_block;
         } else {
             panic!("out of bound");
         }
     }
 
+    pub fn draw_block(block: Block) {
+        
+    }
+
+    
+    pub fn get_size(&self) -> (usize, usize) {
+        (self.width, self.height)
+    }
+
+
+
     //x,y are already greater than 0 as they are usize
     fn check_boundary(&self, x: usize, y: usize) -> bool {
-         x < self.width && y < self.height 
+        x < self.width && y < self.height
     }
 
     ///Draw border
-    fn init(&mut self) {
+    fn draw_border(&mut self) {
         for i in 0..self.width {
             self.set_at(i, 0, BlockType::Border);
         }
