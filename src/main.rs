@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 use crate::tetris::renderer::BLOCK_RENDER_HEIGHT;
 use crate::tetris::renderer::BLOCK_RENDER_WIDTH;
 
@@ -21,7 +23,8 @@ fn main() {
         });
 
     // Limit to max ~60 fps update rate
-    window.limit_update_rate(Some(std::time::Duration::from_micros(22400)));
+    window.limit_update_rate(Some(std::time::Duration::from_micros(16000)));
+    //window.
 
     while !game.gameover() && window.is_open() && !window.is_key_down(Key::Escape) {
         let key_input = window.get_keys_pressed(KeyRepeat::Yes).unwrap();
