@@ -1,4 +1,5 @@
-use super::{Game, block::BlockType};
+use super::{block::BlockType, Game};
+use crate::tetris::Map;
 
 pub const BLOCK_RENDER_WIDTH: usize = 16;
 pub const BLOCK_RENDER_HEIGHT: usize = 16;
@@ -9,23 +10,41 @@ const BLUE: u32 = 255;
 const BLACK: u32 = 0;
 const WHITE: u32 = 255 << 16 | 255 << 8 | 255;
 
-//TODO : improve renderer
-pub fn render_map(game: &Game) -> Vec<u32> {
-    let map = &game.map;
-    let (width, height) = (game.width, game.height);
+pub fn render_game(game: &Game) -> Vec<u32> {
+    let map_size = game.map.get_size();
 
     //TODO : Cache this. Not always spawning new one
-    let mut buffer: Vec<u32> = vec![0; width*BLOCK_RENDER_HEIGHT*height*BLOCK_RENDER_WIDTH];
+    let mut buffer: Vec<u32> =
+        vec![0; game.width * BLOCK_RENDER_HEIGHT * game.height * BLOCK_RENDER_WIDTH];
 
-    for y in 0..height {
-        for x in 0..width {
-            let block_type = map.get_at(x, y).unwrap();
+    render_map(&mut buffer, &game.map);
 
-            render_block(&mut buffer, (width, height), block_type, (x, y));
+    if let Some(ref falling_block) = game.falling_block {
+        for point in &falling_block.get_shape_at_current_position().points {
+            render_block(
+                &mut buffer,
+                map_size,
+                &BlockType::NewBlock,
+                (point.x, point.y),
+            );
         }
     }
 
     buffer
+}
+
+//TODO : improve renderer
+fn render_map(buffer: &mut Vec<u32>, map: &Map) {
+    let (width, height) = map.get_size();
+
+    //Draw map without falling_block
+    for y in 0..height {
+        for x in 0..width {
+            let block_type = map.get_at(x, y).unwrap();
+
+            render_block(buffer, (width, height), block_type, (x, y));
+        }
+    }
 }
 
 fn render_block(
@@ -34,7 +53,7 @@ fn render_block(
     block_type: &BlockType,
     at: (usize, usize),
 ) {
-    let mut color: u32 = WHITE;
+    let color;
 
     match block_type {
         BlockType::None => {
@@ -51,11 +70,14 @@ fn render_block(
         }
     }
 
-    let (x, y) = (at.0 * BLOCK_RENDER_WIDTH, at.1*BLOCK_RENDER_HEIGHT);
-    let (width, height) = (map_size.0 * BLOCK_RENDER_WIDTH, map_size.1 * BLOCK_RENDER_HEIGHT);
+    let (x, y) = (at.0 * BLOCK_RENDER_WIDTH, at.1 * BLOCK_RENDER_HEIGHT);
+    let (width, _) = (
+        map_size.0 * BLOCK_RENDER_WIDTH,
+        map_size.1 * BLOCK_RENDER_HEIGHT,
+    );
 
-    for i in y..(y+BLOCK_RENDER_HEIGHT) {
-        for j in x..(x+BLOCK_RENDER_WIDTH) {
+    for i in y..(y + BLOCK_RENDER_HEIGHT) {
+        for j in x..(x + BLOCK_RENDER_WIDTH) {
             buffer[i * width + j] = color;
         }
     }

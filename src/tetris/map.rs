@@ -25,7 +25,7 @@ impl Map {
 
     pub fn get_at(&self, x: usize, y: usize) -> Option<&BlockType> {
         if self.check_boundary(x, y) {
-            return Some(&self.map[y as usize * self.width + x as usize]);
+            return Some(&self.map[y * self.width + x]);
         }
 
         None
@@ -33,22 +33,27 @@ impl Map {
 
     pub fn set_at(&mut self, x: usize, y: usize, new_block: BlockType) {
         if self.check_boundary(x, y) {
-            self.map[y as usize * self.width + x as usize] = new_block;
+            self.map[y * self.width + x] = new_block;
         } else {
             panic!("out of bound");
         }
     }
 
-    pub fn draw_block(block: Block) {
-        
+    pub fn draw_block(&mut self, block: &Block) {
+        let (current_x, current_y) = block.get_current_position();
+
+        for point in &block.get_shape().points {
+            self.set_at(
+                point.x + current_x,
+                point.y + current_y,
+                BlockType::ArrivedBlock,
+            );
+        }
     }
 
-    
     pub fn get_size(&self) -> (usize, usize) {
         (self.width, self.height)
     }
-
-
 
     //x,y are already greater than 0 as they are usize
     fn check_boundary(&self, x: usize, y: usize) -> bool {
@@ -57,11 +62,8 @@ impl Map {
 
     ///Draw border
     fn draw_border(&mut self) {
-        for i in 0..self.width {
-            self.set_at(i, 0, BlockType::Border);
-        }
-
-        for i in 1..self.height - 1 {
+        //side borders
+        for i in 0..self.height - 1 {
             self.set_at(0, i, BlockType::Border);
             self.set_at(self.width - 1, i, BlockType::Border);
 
@@ -70,6 +72,7 @@ impl Map {
             }
         }
 
+        //bottom border
         for i in 0..self.width {
             self.set_at(i, self.height - 1, BlockType::Border);
         }

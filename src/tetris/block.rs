@@ -13,7 +13,6 @@ pub enum BlockType {
 }
 
 pub enum Direction {
-    Up,
     Down,
     Left,
     Right,
@@ -22,7 +21,6 @@ pub enum Direction {
 impl Direction {
     pub fn move_amount(&self) -> (i32, i32) {
         match self {
-            Direction::Up => (0, -1),
             Direction::Down => (0, 1),
             Direction::Left => (-1, 0),
             Direction::Right => (1, 0),
@@ -184,7 +182,7 @@ impl Block {
     }
 
     pub fn has_collision(&self, map: &Map) -> bool {
-        for point in &self.block_info.current_shape().points {
+        for point in &self.get_shape_at_current_position().points {
             if map.get_at(point.x, point.y).unwrap() != &BlockType::None {
                 return true;
             }
@@ -194,20 +192,20 @@ impl Block {
     }
 
     pub fn can_move_to(&self, map: &Map, direction: &Direction) -> bool {
-        let mut can_move = true;
-
         let (x_amount, y_amount) = direction.move_amount();
 
-        for point in &self.block_info.current_shape().points {
+        for point in &self.get_shape_at_current_position().points {
             let x = (point.x as i32 + x_amount) as usize;
             let y = (point.y as i32 + y_amount) as usize;
 
-            if map.get_at(x, y).unwrap() != &BlockType::None {
-                can_move = false;
+            if let Some(block_type) = map.get_at(x, y) {
+                if block_type != &BlockType::None {
+                    return false;
+                }
             }
         }
 
-        can_move
+        true
     }
 
     pub fn move_to(&mut self, direction: &Direction) {
@@ -226,19 +224,44 @@ impl Block {
     }
 
     pub fn can_rotate(&self, map: &Map) -> bool {
-        let mut can_rotate = true;
+        let (current_x, current_y) = self.get_current_position();
         let rotated_shape = self.block_info.peek_rotate();
 
         for point in &rotated_shape.points {
-            if map.get_at(point.x, point.y).unwrap() != &BlockType::None {
-                can_rotate = false;
+            if let Some(block_type) = map.get_at(point.x + current_x, point.y + current_y) {
+                if block_type != &BlockType::None {
+                    return false;
+                }
             }
         }
 
-        can_rotate
+        true
     }
 
     pub fn rotate(&mut self) {
         self.block_info.rotate();
+    }
+
+    //TODO : Refactor this. Too many code duplication and error prone
+    pub fn get_shape_at_current_position(&self) -> BlockShape {
+        let mut block_shape = BlockShape { points: Vec::new() };
+        let (current_x, current_y) = self.get_current_position();
+
+        for point in &self.block_info.current_shape().points {
+            block_shape.points.push(Point {
+                x: point.x + current_x,
+                y: point.y + current_y,
+            });
+        }
+
+        block_shape
+    }
+
+    pub fn get_shape(&self) -> &BlockShape {
+        self.block_info.current_shape()
+    }
+
+    pub fn get_current_position(&self) -> (usize, usize) {
+        (self.current_position.x, self.current_position.y)
     }
 }
