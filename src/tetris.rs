@@ -55,17 +55,19 @@ impl Game {
                     let block = Block::new_with_random_shape();
 
                     //FIXME : This is temp gameover
-                    // if block.has_collision(&self.map) {
-                    //     self.gameover = true;
-                    //     return;
-                    // }
+                    if block.has_collision(&self.map) {
+                        self.gameover = true;
+                        return;
+                    }
 
                     self.falling_block = Some(block);
                 }
             }
-
+                        
             self.last_drop = Instant::now();
         }
+
+        self.remove_completed_lines();
     }
 
     //TODO : refactor this rendering mechanism
@@ -85,8 +87,28 @@ impl Game {
             } else if key == &Key::Up {
                 self.rotate_if_possible();
             } else if key == &Key::Space {
-                //TODO : drop to bottom immediately
+                //Drop to the bottom immediately
+                if let Some(ref mut falling_block) = self.falling_block {
+                    while falling_block.can_drop(&self.map) {
+                        falling_block.drop();
+                    }
+                }
             }
+        }
+    }
+
+    fn remove_completed_lines(&mut self) {
+        //line 0 is border
+        let mut line_num = 1;
+
+        while line_num < self.height {
+            if self.map.is_line_full(line_num) {
+                self.map.remove_line(line_num);
+
+                continue;
+            }
+
+            line_num += 1;
         }
     }
 
