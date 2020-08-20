@@ -30,8 +30,6 @@ fn main() {
         let key_input = window.get_keys_pressed(KeyRepeat::Yes).unwrap();
         let key_input = key_input.last();
 
-        //println!("{:?}", key_input);
-
         game.update(key_input);
         let buf = &game.render();
 
